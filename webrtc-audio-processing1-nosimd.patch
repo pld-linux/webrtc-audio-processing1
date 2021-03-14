@@ -1,0 +1,219 @@
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/adaptive_fir_filter.cc.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/adaptive_fir_filter.cc	2021-03-14 13:27:15.929900062 +0100
+@@ -16,7 +16,7 @@
+ #if defined(WEBRTC_HAS_NEON)
+ #include <arm_neon.h>
+ #endif
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ #include <math.h>
+@@ -86,7 +86,7 @@
+ }
+ #endif
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ // Computes and stores the frequency response of the filter.
+ void ComputeFrequencyResponse_Sse2(
+     size_t num_partitions,
+@@ -208,7 +208,7 @@
+ }
+ #endif
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ // Adapts the filter partitions. (SSE2 variant)
+ void AdaptPartitions_Sse2(const RenderBuffer& render_buffer,
+                           const FftData& G,
+@@ -373,7 +373,7 @@
+ }
+ #endif
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ // Produces the filter output (SSE2 variant).
+ void ApplyFilter_Sse2(const RenderBuffer& render_buffer,
+                       size_t num_partitions,
+@@ -552,7 +552,7 @@
+                                FftData* S) const {
+   RTC_DCHECK(S);
+   switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Aec3Optimization::kSse2:
+       aec3::ApplyFilter_Sse2(render_buffer, current_size_partitions_, H_, S);
+       break;
+@@ -596,7 +596,7 @@
+   H2->resize(current_size_partitions_);
+ 
+   switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Aec3Optimization::kSse2:
+       aec3::ComputeFrequencyResponse_Sse2(current_size_partitions_, H_, H2);
+       break;
+@@ -621,7 +621,7 @@
+ 
+   // Adapt the filter.
+   switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Aec3Optimization::kSse2:
+       aec3::AdaptPartitions_Sse2(render_buffer, G, current_size_partitions_,
+                                  &H_);
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/adaptive_fir_filter_erl.cc.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/adaptive_fir_filter_erl.cc	2021-03-14 13:27:55.803017384 +0100
+@@ -16,7 +16,7 @@
+ #if defined(WEBRTC_HAS_NEON)
+ #include <arm_neon.h>
+ #endif
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ 
+@@ -54,7 +54,7 @@
+ }
+ #endif
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ // Computes and stores the echo return loss estimate of the filter, which is the
+ // sum of the partition frequency responses.
+ void ErlComputer_SSE2(
+@@ -81,7 +81,7 @@
+   RTC_DCHECK_EQ(kFftLengthBy2Plus1, erl.size());
+   // Update the frequency response and echo return loss for the filter.
+   switch (optimization) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Aec3Optimization::kSse2:
+       aec3::ErlComputer_SSE2(H2, erl);
+       break;
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/fft_data.h.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/fft_data.h	2021-03-14 13:28:55.999357940 +0100
+@@ -14,7 +14,7 @@
+ // Defines WEBRTC_ARCH_X86_FAMILY, used below.
+ #include "rtc_base/system/arch.h"
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ #include <algorithm>
+@@ -48,7 +48,7 @@
+                 rtc::ArrayView<float> power_spectrum) const {
+     RTC_DCHECK_EQ(kFftLengthBy2Plus1, power_spectrum.size());
+     switch (optimization) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+       case Aec3Optimization::kSse2: {
+         constexpr int kNumFourBinBands = kFftLengthBy2 / 4;
+         constexpr int kLimit = kNumFourBinBands * 4;
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/vector_math.h.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/vector_math.h	2021-03-14 13:29:18.652568550 +0100
+@@ -17,7 +17,7 @@
+ #if defined(WEBRTC_HAS_NEON)
+ #include <arm_neon.h>
+ #endif
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ #include <math.h>
+@@ -43,7 +43,7 @@
+   void SqrtAVX2(rtc::ArrayView<float> x);
+   void Sqrt(rtc::ArrayView<float> x) {
+     switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+       case Aec3Optimization::kSse2: {
+         const int x_size = static_cast<int>(x.size());
+         const int vector_limit = x_size >> 2;
+@@ -123,7 +123,7 @@
+     RTC_DCHECK_EQ(z.size(), x.size());
+     RTC_DCHECK_EQ(z.size(), y.size());
+     switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+       case Aec3Optimization::kSse2: {
+         const int x_size = static_cast<int>(x.size());
+         const int vector_limit = x_size >> 2;
+@@ -173,7 +173,7 @@
+   void Accumulate(rtc::ArrayView<const float> x, rtc::ArrayView<float> z) {
+     RTC_DCHECK_EQ(z.size(), x.size());
+     switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+       case Aec3Optimization::kSse2: {
+         const int x_size = static_cast<int>(x.size());
+         const int vector_limit = x_size >> 2;
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/matched_filter.cc.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/aec3/matched_filter.cc	2021-03-14 13:29:40.592449692 +0100
+@@ -15,7 +15,7 @@
+ #if defined(WEBRTC_HAS_NEON)
+ #include <arm_neon.h>
+ #endif
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ #include <algorithm>
+@@ -142,7 +142,7 @@
+ 
+ #endif
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ 
+ void MatchedFilterCore_SSE2(size_t x_start_index,
+                             float x2_sum_threshold,
+@@ -358,7 +358,7 @@
+         render_buffer.buffer.size();
+ 
+     switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+       case Aec3Optimization::kSse2:
+         aec3::MatchedFilterCore_SSE2(x_start_index, x2_sum_threshold,
+                                      smoothing_, render_buffer.buffer, y,
+--- webrtc-audio-processing-1.0/webrtc/modules/audio_processing/agc2/rnn_vad/rnn.cc.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/webrtc/modules/audio_processing/agc2/rnn_vad/rnn.cc	2021-03-14 13:42:56.104806702 +0100
+@@ -16,7 +16,7 @@
+ #if defined(WEBRTC_HAS_NEON)
+ #include <arm_neon.h>
+ #endif
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ #include <emmintrin.h>
+ #endif
+ #include <algorithm>
+@@ -227,7 +227,7 @@
+   }
+ }
+ 
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+ // Fully connected layer SSE2 implementation.
+ void ComputeFullyConnectedLayerOutputSse2(
+     size_t input_size,
+@@ -295,7 +295,7 @@
+ 
+ void FullyConnectedLayer::ComputeOutput(rtc::ArrayView<const float> input) {
+   switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Optimization::kSse2:
+       ComputeFullyConnectedLayerOutputSse2(input_size_, output_size_, input,
+                                            bias_, weights_,
+@@ -355,7 +355,7 @@
+ 
+ void GatedRecurrentLayer::ComputeOutput(rtc::ArrayView<const float> input) {
+   switch (optimization_) {
+-#if defined(WEBRTC_ARCH_X86_FAMILY)
++#if defined(WEBRTC_ARCH_X86_FAMILY) && defined(__SSE2__)
+     case Optimization::kSse2:
+       // TODO(bugs.chromium.org/10480): Handle Optimization::kSse2.
+       ComputeGruLayerOutput(input_size_, output_size_, input, weights_,

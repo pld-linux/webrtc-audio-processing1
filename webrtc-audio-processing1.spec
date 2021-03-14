@@ -5,28 +5,32 @@
 # [1] http://code.google.com/p/webrtc/
 #
 # Conditional build:
-%bcond_without	neon		# without ARM NEON instructions
+%bcond_without	neon		# ARM NEON instructions
+%bcond_with	sse2		# SSE2 instructions
 
 %ifnarch armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64
 %undefine	with_neon
 %endif
+%ifarch pentium4 %{x8664} x32
+%define		with_sse2	1
+%endif
 
 Summary:	WebRTC Audio Processing library
 Summary(pl.UTF-8):	Biblioteka WebRTC Audio Processing
-Name:		webrtc-audio-processing
-Version:	0.3.1
+Name:		webrtc-audio-processing1
+Version:	1.0
 Release:	1
 License:	BSD
 Group:		Libraries
-Source0:	https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/%{name}-%{version}.tar.xz
-# Source0-md5:	6e10724ca34bcbc715a4c208273acb0c
+Source0:	https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-%{version}.tar.gz
+# Source0-md5:	8ee1b2f3e615c6c2024951c559a9913a
+Patch0:		%{name}-abseil.patch
+Patch1:		%{name}-nosimd.patch
 URL:		https://www.freedesktop.org/software/pulseaudio/webrtc-audio-processing/
-BuildRequires:	autoconf >= 2.50
-BuildRequires:	automake >= 1:1.11
-BuildRequires:	libstdc++-devel >= 6:4.7
-BuildRequires:	libtool
-BuildRequires:	tar >= 1:1.22
-BuildRequires:	xz
+BuildRequires:	abseil-cpp-devel >= 20200923
+BuildRequires:	libstdc++-devel >= 6:5
+BuildRequires:	meson >= 0.54
+BuildRequires:	ninja >= 1.5
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -48,7 +52,8 @@ Summary:	Header files for WebRTC Audio Processing library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki WebRTC Audio Processing
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libstdc++-devel
+Requires:	abseil-cpp-devel >= 20200923
+Requires:	libstdc++-devel >= 6:5
 
 %description devel
 This package contains the header files needed to develop programs
@@ -71,25 +76,31 @@ Static WebRTC Audio Processing library.
 Biblioteka statyczna WebRTC Audio Processing.
 
 %prep
-%setup -q
+%setup -q -n webrtc-audio-processing-%{version}
+%patch0 -p1
+%patch1 -p1
+
+%ifarch %{ix86}
+%if %{without sse2}
+# add -DPFFFT_SIMD_DISABLE
+%{__sed} -i -e 's/have_arm and not have_neon.*/& or true/' webrtc/third_party/pffft/meson.build
+%endif
+%endif
 
 %build
-%{__libtoolize}
-%{__aclocal}
-%{__autoconf}
-%{__automake}
-%configure \
-	%{!?with_neon:--disable-neon} \
-	--disable-silent-rules
-%{__make}
+%if %{with sse2}
+CFLAGS="%{rpmcflags} -msse2"
+CXXFLAGS="%{rpmcxxflags} -msse2"
+%endif
+%meson build \
+	-Dneon=%{?with_neon:runtime}%{!?with_neon:no}
+
+%ninja_build -C build
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__make} install \
-	DESTDIR=$RPM_BUILD_ROOT
 
-# obsoleted by pkg-config
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/*.la
+%ninja_install -C build
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -100,15 +111,18 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS COPYING NEWS README.md webrtc/PATENTS
-%attr(755,root,root) %{_libdir}/libwebrtc_audio_processing.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libwebrtc_audio_processing.so.1
+%attr(755,root,root) %{_libdir}/libwebrtc-audio-coding-1.so.0
+%attr(755,root,root) %{_libdir}/libwebrtc-audio-processing-1.so.0
 
 %files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libwebrtc_audio_processing.so
-%{_includedir}/webrtc_audio_processing
-%{_pkgconfigdir}/webrtc-audio-processing.pc
+%attr(755,root,root) %{_libdir}/libwebrtc-audio-coding-1.so
+%attr(755,root,root) %{_libdir}/libwebrtc-audio-processing-1.so
+%{_includedir}/webrtc-audio-processing-1
+%{_pkgconfigdir}/webrtc-audio-coding-1.pc
+%{_pkgconfigdir}/webrtc-audio-processing-1.pc
 
 %files static
 %defattr(644,root,root,755)
-%{_libdir}/libwebrtc_audio_processing.a
+%{_libdir}/libwebrtc-audio-coding-1.a
+%{_libdir}/libwebrtc-audio-processing-1.a

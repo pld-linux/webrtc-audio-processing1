@@ -1,0 +1,11 @@
+--- webrtc-audio-processing-1.0/meson.build.orig	2020-11-27 20:30:53.000000000 +0100
++++ webrtc-audio-processing-1.0/meson.build	2021-03-14 12:53:34.720849883 +0100
+@@ -46,7 +46,7 @@
+   cpp.find_library('absl_flags_internal'),
+   cpp.find_library('absl_flags_marshalling'),
+   cpp.find_library('absl_flags_parse'),
+-  cpp.find_library('absl_flags_registry'),
++  cpp.find_library('absl_flags_reflection'),
+   cpp.find_library('absl_flags_usage_internal'),
+   cpp.find_library('absl_raw_logging_internal'),
+   cpp.find_library('absl_strings'),
