@@ -19,13 +19,14 @@ Summary:	WebRTC Audio Processing library
 Summary(pl.UTF-8):	Biblioteka WebRTC Audio Processing
 Name:		webrtc-audio-processing1
 Version:	1.0
-Release:	3
+Release:	4
 License:	BSD
 Group:		Libraries
 Source0:	https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-%{version}.tar.gz
 # Source0-md5:	8ee1b2f3e615c6c2024951c559a9913a
 Patch0:		%{name}-abseil.patch
 Patch1:		%{name}-nosimd.patch
+Patch2:		cxx17.patch
 URL:		https://www.freedesktop.org/software/pulseaudio/webrtc-audio-processing/
 BuildRequires:	abseil-cpp-devel >= 20200923
 BuildRequires:	libstdc++-devel >= 6:5
@@ -79,6 +80,7 @@ Biblioteka statyczna WebRTC Audio Processing.
 %setup -q -n webrtc-audio-processing-%{version}
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %ifarch %{ix86}
 %if %{without sse2}
