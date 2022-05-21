@@ -8,7 +8,7 @@
 %bcond_without	neon		# ARM NEON instructions
 %bcond_with	sse2		# SSE2 instructions
 
-%ifnarch armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64
+%ifnarch armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl
 %undefine	with_neon
 %endif
 %ifarch pentium4 %{x8664} x32
