@@ -32,6 +32,7 @@ BuildRequires:	abseil-cpp-devel >= 20200923
 BuildRequires:	libstdc++-devel >= 6:5
 BuildRequires:	meson >= 0.54
 BuildRequires:	ninja >= 1.5
+BuildRequires:	rpmbuild(macros) >= 1.736
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
