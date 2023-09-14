@@ -8,7 +8,7 @@
 %bcond_without	neon		# ARM NEON instructions
 %bcond_with	sse2		# SSE2 instructions
 
-%ifnarch armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl
+%ifnarch armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64
 %undefine	with_neon
 %endif
 %ifarch pentium4 %{x8664} x32
@@ -93,7 +93,7 @@ CFLAGS="%{rpmcflags} -msse2"
 CXXFLAGS="%{rpmcxxflags} -msse2"
 %endif
 %meson build \
-	-Dneon=%{?with_neon:runtime}%{!?with_neon:no}
+	-Dneon=%{?with_neon:yes}%{!?with_neon:no}
 
 %ninja_build -C build
 
